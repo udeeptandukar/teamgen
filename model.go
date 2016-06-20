@@ -9,7 +9,15 @@ type TeamGenerator struct {
 	SlackTeamID    string
 	SlackChannelID string
 }
+
 type slashResponse struct {
 	ResponseType string `json:"response_type"`
 	Text         string `json:"text"`
+}
+
+func constructSlashResponse(responseType string, text string) slashResponse {
+	return slashResponse{
+		ResponseType: responseType,
+		Text:         text,
+	}
 }

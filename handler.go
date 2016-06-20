@@ -42,14 +42,9 @@ func parseCommand(command string) (string, []string) {
 }
 
 func processComamnd(cmdType string, args []string, teamID string, channelID string) slashResponse {
-	resp := slashResponse{
-		ResponseType: "ephemeral",
-		Text:         "Invalid command",
-	}
-
+	resp := constructSlashResponse("ephemeral", "Invalid command")
 	if cmdType == "member-add" {
 		resp = addMember(teamID, channelID, args)
 	}
-
 	return resp
 }
