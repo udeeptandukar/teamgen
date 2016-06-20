@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"golang.org/x/net/context"
+
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 )
@@ -21,7 +23,7 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cmdType, cmdArgs := parseCommand(r.PostFormValue("text"))
-	resp := processComamnd(cmdType, cmdArgs, r.PostFormValue("team_id"), r.PostFormValue("channel_id"))
+	resp := processComamnd(ctx, cmdType, cmdArgs, r.PostFormValue("team_id"), r.PostFormValue("channel_id"))
 
 	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -41,10 +43,10 @@ func parseCommand(command string) (string, []string) {
 	return cmdType, cmdArgs
 }
 
-func processComamnd(cmdType string, args []string, teamID string, channelID string) slashResponse {
+func processComamnd(ctx context.Context, cmdType string, args []string, teamID string, channelID string) slashResponse {
 	resp := constructSlashResponse("ephemeral", "Invalid command")
 	if cmdType == "member-add" {
-		resp = addMember(teamID, channelID, args)
+		resp = addMember(ctx, teamID, channelID, args)
 	}
 	return resp
 }

@@ -1,5 +1,13 @@
 package teamgen
 
+import (
+	"time"
+
+	"google.golang.org/appengine/datastore"
+
+	"golang.org/x/net/context"
+)
+
 // TeamGenerator to store information required to generate random team
 type TeamGenerator struct {
 	Members        []string
@@ -8,6 +16,7 @@ type TeamGenerator struct {
 	RandomName     bool
 	SlackTeamID    string
 	SlackChannelID string
+	LastUpdated    time.Time
 }
 
 type slashResponse struct {
@@ -20,4 +29,9 @@ func constructSlashResponse(responseType string, text string) slashResponse {
 		ResponseType: responseType,
 		Text:         text,
 	}
+}
+
+func generateTeamGeneratorKey(ctx context.Context, teamID string, channelID string) *datastore.Key {
+	keyString := teamID + "-" + channelID
+	return datastore.NewKey(ctx, "TeamGenerator", keyString, 0, nil)
 }
