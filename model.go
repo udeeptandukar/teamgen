@@ -12,20 +12,21 @@ import (
 type TeamGenerator struct {
 	Members        []string
 	Schedules      []string
-	NumberOfTeams  int16
+	NumberOfTeams  int
 	RandomName     bool
 	SlackTeamID    string
 	SlackChannelID string
 	LastUpdated    time.Time
 }
 
-type slashResponse struct {
+// SlashResponse is slash response
+type SlashResponse struct {
 	ResponseType string `json:"response_type"`
 	Text         string `json:"text"`
 }
 
-func constructSlashResponse(responseType string, text string) slashResponse {
-	return slashResponse{
+func constructSlashResponse(responseType string, text string) SlashResponse {
+	return SlashResponse{
 		ResponseType: responseType,
 		Text:         text,
 	}

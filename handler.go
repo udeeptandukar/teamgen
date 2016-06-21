@@ -43,10 +43,15 @@ func parseCommand(command string) (string, []string) {
 	return cmdType, cmdArgs
 }
 
-func processComamnd(ctx context.Context, cmdType string, args []string, teamID string, channelID string) slashResponse {
-	resp := constructSlashResponse("ephemeral", "Invalid command")
-	if cmdType == "member-add" {
+func processComamnd(ctx context.Context, cmdType string, args []string, teamID string, channelID string) SlashResponse {
+	var resp SlashResponse
+	switch cmdType {
+	case "member-add":
 		resp = addMember(ctx, teamID, channelID, args)
+	case "show-config":
+		resp = showConfig(ctx, teamID, channelID)
+	default:
+		resp = constructSlashResponse("ephemeral", "Invalid command")
 	}
 	return resp
 }
