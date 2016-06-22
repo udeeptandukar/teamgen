@@ -19,14 +19,20 @@ type TeamGenerator struct {
 	LastUpdated    time.Time
 }
 
-// SlashResponse is slash response
-type SlashResponse struct {
+// ChannelOAuth to store oauth token for a slack channel
+type ChannelOAuth struct {
+	SlackChannelID string
+	Token          string
+}
+
+// SlackCmdResponse is slash response
+type SlackCmdResponse struct {
 	ResponseType string `json:"response_type"`
 	Text         string `json:"text"`
 }
 
-func constructSlashResponse(responseType string, text string) SlashResponse {
-	return SlashResponse{
+func constructSlackCmdResponse(responseType string, text string) SlackCmdResponse {
+	return SlackCmdResponse{
 		ResponseType: responseType,
 		Text:         text,
 	}

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/appengine/datastore"
 )
 
-func addMember(ctx context.Context, teamID string, channelID string, members []string) SlashResponse {
+func addMember(ctx context.Context, teamID string, channelID string, members []string) SlackCmdResponse {
 	key := generateTeamGeneratorKey(ctx, teamID, channelID)
 	teamGenerator := new(TeamGenerator)
 
@@ -26,21 +26,21 @@ func addMember(ctx context.Context, teamID string, channelID string, members []s
 	}
 
 	if _, err := datastore.Put(ctx, key, teamGenerator); err == nil {
-		return constructSlashResponse("ephemeral", "Team members added: "+strings.Join(members, ", "))
+		return constructSlackCmdResponse("ephemeral", "Team members added: "+strings.Join(members, ", "))
 	}
 
-	return constructSlashResponse("ephemeral", "Error occurred while adding members. Please try again.")
+	return constructSlackCmdResponse("ephemeral", "Error occurred while adding members. Please try again.")
 }
 
-func showConfig(ctx context.Context, teamID string, channelID string) SlashResponse {
+func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdResponse {
 	key := generateTeamGeneratorKey(ctx, teamID, channelID)
 	teamGenerator := new(TeamGenerator)
 
 	if err := datastore.Get(ctx, key, teamGenerator); err == nil {
 		text := "Team members: " + strings.Join(teamGenerator.Members, ", ")
 		text += "\nNo. of teams: " + strconv.Itoa(teamGenerator.NumberOfTeams)
-		return constructSlashResponse("ephemeral", text)
+		return constructSlackCmdResponse("ephemeral", text)
 	}
 
-	return constructSlashResponse("ephemeral", "No config found.")
+	return constructSlackCmdResponse("ephemeral", "No config found.")
 }
