@@ -6,4 +6,5 @@ import (
 
 func init() {
 	http.HandleFunc("/", handleCommand)
+	http.HandleFunc("/sendMessage", handleSendMessage)
 }

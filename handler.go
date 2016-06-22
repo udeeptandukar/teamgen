@@ -9,6 +9,8 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+
+	"github.com/bluele/slack"
 )
 
 // handleCommand adds a member to a team
@@ -16,7 +18,7 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
 	postedToken := r.PostFormValue("token")
-	if token != "" && postedToken != token {
+	if cmdToken != "" && postedToken != cmdToken {
 		log.Errorf(ctx, "Invalid Slack token: %s", postedToken)
 		http.Error(w, "Invalid Slack token.", http.StatusBadRequest)
 		return
@@ -54,4 +56,16 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 		resp = constructSlashResponse("ephemeral", "Invalid command")
 	}
 	return resp
+}
+
+func handleSendMessage(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	// teamId := r.FormValue("teamId")
+	channelID := r.FormValue("channelId")
+
+	api := slack.New(botToken)
+	message := "Hello, world!"
+	if err := api.ChatPostMessage(channelID, message, nil); err != nil {
+		log.Errorf(ctx, "Error sending message: %s", err)
+	}
 }

@@ -1,0 +1,6 @@
+queue:
+- name: default
+  rate: 100/s
+  
+- name: send-message
+  rate: 100/s

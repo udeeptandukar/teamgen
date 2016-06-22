@@ -1,5 +1,6 @@
 package teamgen
 
 var (
-	token = "4TWKP2dQGXC7or1gK868SKuj"
+	cmdToken = "4TWKP2dQGXC7or1gK868SKuj"
+	botToken = "xoxb-53124327234-JzscxWesIHivX5UBhd2T8Apb"
 )
