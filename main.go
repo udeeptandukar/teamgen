@@ -5,6 +5,7 @@ import (
 )
 
 func init() {
-	http.HandleFunc("/", handleCommand)
-	http.HandleFunc("/sendMessage", handleSendMessage)
+	http.HandleFunc("/cmd", handleCommand)
+	http.HandleFunc("/sendMsg", handleSendMessage)
+	http.HandleFunc("/oauth", handleOauth)
 }

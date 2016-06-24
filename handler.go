@@ -61,3 +61,7 @@ func handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	// teamId := r.FormValue("teamId")
 	// channelID := r.FormValue("channelId")
 }
+
+func handleOauth(w http.ResponseWriter, r *http.Request) {
+
+}
