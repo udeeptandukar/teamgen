@@ -1,10 +1,17 @@
 package teamgen
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
+
+	"golang.org/x/net/context"
+	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/urlfetch"
 )
 
 type response struct {
@@ -12,27 +19,64 @@ type response struct {
 	Error string
 }
 
-func sendMessage(channel string, token string, message string) error {
-	v := url.Values{}
-	v.Set("token", token)
-	v.Set("channel", channel)
-	v.Set("text", message)
-	v.Set("as_user", "true")
+func postMessage(ctx context.Context, teamID string, channelID string) error {
+	client := urlfetch.Client(ctx)
 
-	res, err := http.PostForm("https://slack.com/api/chat.postMessage", v)
+	token, err := getBotAccessToken(ctx, teamID)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	data := url.Values{}
+	data.Set("token", token)
+	data.Set("channel", channelID)
+	data.Set("text", "Hello world")
+	encodedData := data.Encode()
+
+	req, _ := http.NewRequest("POST", postMessageURL, bytes.NewBufferString(encodedData))
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+
+	respBody := &response{}
+	decoder := json.NewDecoder(resp.Body)
+	if err := decoder.Decode(respBody); err != nil {
+		return err
+	}
+
+	if !respBody.Ok {
+		return errors.New(respBody.Error)
+	}
+
+	return nil
+}
+
+func doOauthAuthorization(ctx context.Context, code string) error {
+	client := urlfetch.Client(ctx)
+
+	data := url.Values{}
+	data.Set("client_id", clientID)
+	data.Add("client_secret", clientSecret)
+	data.Add("code", code)
+	encodedData := data.Encode()
+
+	req, _ := http.NewRequest("POST", oauthAccessURL, bytes.NewBufferString(encodedData))
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
 
-	resBody := &response{}
-	decoder := json.NewDecoder(res.Body)
-	if err := decoder.Decode(resBody); err != nil {
+	var oauthResponse = new(OAuthAccessToken)
+	if err := json.Unmarshal(responseBody, &oauthResponse); err != nil {
 		return err
 	}
 
-	if !resBody.Ok {
-		return errors.New(resBody.Error)
+	key := generateOAuthAccessTokenKey(ctx, oauthResponse.TeamID)
+	oauthResponse.LastUpdated = time.Now()
+	if _, err := datastore.Put(ctx, key, oauthResponse); err != nil {
+		return err
 	}
 
 	return nil

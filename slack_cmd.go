@@ -6,6 +6,19 @@ import (
 	"golang.org/x/net/context"
 )
 
+// SlackCmdResponse is slash response
+type SlackCmdResponse struct {
+	ResponseType string `json:"response_type"`
+	Text         string `json:"text"`
+}
+
+func constructSlackCmdResponse(responseType string, text string) SlackCmdResponse {
+	return SlackCmdResponse{
+		ResponseType: responseType,
+		Text:         text,
+	}
+}
+
 func parseCommand(command string) (string, []string) {
 	result := strings.Fields(command)
 	cmdType := result[0]
