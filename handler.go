@@ -3,14 +3,15 @@ package teamgen
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"golang.org/x/net/context"
 
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 )
@@ -44,9 +45,39 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSendMessage(w http.ResponseWriter, r *http.Request) {
-	// ctx := appengine.NewContext(r)
+	ctx := appengine.NewContext(r)
+	client := urlfetch.Client(ctx)
 	// teamId := r.FormValue("teamId")
-	// channelID := r.FormValue("channelId")
+	channelID := r.FormValue("channelId")
+	token := r.FormValue("token")
+
+	// TODO: Get Token using teamID from OAuthAccessToken data
+	data := url.Values{}
+	data.Set("token", token)
+	data.Set("channel", channelID)
+	data.Set("text", "Hello world")
+	encodedData := data.Encode()
+
+	req, _ := http.NewRequest("POST", postMessageURL, bytes.NewBufferString(encodedData))
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var oauthResponse = new(OAuthAccessToken)
+	err = json.Unmarshal(responseBody, &oauthResponse)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	w.Header().Set("content-type", "application/json")
+	if err := json.NewEncoder(w).Encode(oauthResponse); err != nil {
+		http.Error(w, "Error encoding JSON.", http.StatusInternalServerError)
+		return
+	}
 }
 
 func handleOauth(w http.ResponseWriter, r *http.Request) {
@@ -63,24 +94,28 @@ func handleOauth(w http.ResponseWriter, r *http.Request) {
 	resp, _ := client.Do(req)
 	defer resp.Body.Close()
 
-	fmt.Fprint(w, resp)
-
-	body, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	var bodydata interface{}
-	err = json.Unmarshal(body, &bodydata)
+	var oauthResponse = new(OAuthAccessToken)
+	err = json.Unmarshal(responseBody, &oauthResponse)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Fprint(w, bodydata)
 
-	// w.Header().Set("content-type", "application/json")
-	// if err := json.NewEncoder(w).Encode(resp.Body); err != nil {
-	// 	log.Errorf(ctx, "Error encoding JSON: %s", err)
-	// 	http.Error(w, "Error encoding JSON.", http.StatusInternalServerError)
-	// 	return
-	// }
+	key := generateOAuthAccessTokenKey(ctx, oauthResponse.TeamID)
+	oauthResponse.LastUpdated = time.Now()
+	if _, err := datastore.Put(ctx, key, oauthResponse); err != nil {
+		log.Errorf(ctx, "Error on adding access token to datastore: %s", err)
+		http.Error(w, "Error occurred during authorization process JSON.", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	if err := json.NewEncoder(w).Encode(oauthResponse); err != nil {
+		http.Error(w, "Error encoding JSON.", http.StatusInternalServerError)
+		return
+	}
 }

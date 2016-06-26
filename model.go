@@ -37,6 +37,7 @@ type OAuthAccessToken struct {
 	TeamID      string  `json:"team_id"`
 	TeamName    string  `json:"team_name"`
 	Bot         BotUser `json:"bot"`
+	LastUpdated time.Time
 }
 
 func generateOAuthAccessTokenKey(ctx context.Context, teamID string) *datastore.Key {
