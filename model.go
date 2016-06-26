@@ -39,6 +39,10 @@ type OAuthAccessToken struct {
 	Bot         BotUser `json:"bot"`
 }
 
+func generateOAuthAccessTokenKey(ctx context.Context, teamID string) *datastore.Key {
+	return datastore.NewKey(ctx, "OAuthAccessToken", teamID, 0, nil)
+}
+
 // SlackCmdResponse is slash response
 type SlackCmdResponse struct {
 	ResponseType string `json:"response_type"`
@@ -50,8 +54,4 @@ func constructSlackCmdResponse(responseType string, text string) SlackCmdRespons
 		ResponseType: responseType,
 		Text:         text,
 	}
-}
-
-func generateOAuthAccessTokenKey(ctx context.Context, teamID string) *datastore.Key {
-	return datastore.NewKey(ctx, "OAuthAccessToken", teamID, 0, nil)
 }
