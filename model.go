@@ -19,10 +19,24 @@ type TeamGenerator struct {
 	LastUpdated    time.Time
 }
 
-// ChannelOAuth to store oauth token for a slack channel
-type ChannelOAuth struct {
-	SlackChannelID string
-	Token          string
+func generateTeamGeneratorKey(ctx context.Context, teamID string, channelID string) *datastore.Key {
+	keyString := teamID + "-" + channelID
+	return datastore.NewKey(ctx, "TeamGenerator", keyString, 0, nil)
+}
+
+// BotUser holds structure for bot user and access token
+type BotUser struct {
+	BotUserID      string `json:"bot_user_id"`
+	BotAccessToken string `json:"bot_access_token"`
+}
+
+// OAuthAccessToken to store oauth token for a slack channel
+type OAuthAccessToken struct {
+	AccessToken string  `json:"access_token"`
+	Scope       string  `json:"scope"`
+	TeamID      string  `json:"team_id"`
+	TeamName    string  `json:"team_name"`
+	Bot         BotUser `json:"bot"`
 }
 
 // SlackCmdResponse is slash response
@@ -38,7 +52,6 @@ func constructSlackCmdResponse(responseType string, text string) SlackCmdRespons
 	}
 }
 
-func generateTeamGeneratorKey(ctx context.Context, teamID string, channelID string) *datastore.Key {
-	keyString := teamID + "-" + channelID
-	return datastore.NewKey(ctx, "TeamGenerator", keyString, 0, nil)
+func generateOAuthAccessTokenKey(ctx context.Context, teamID string) *datastore.Key {
+	return datastore.NewKey(ctx, "OAuthAccessToken", teamID, 0, nil)
 }
