@@ -61,19 +61,19 @@ func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdRe
 	return constructSlackCmdResponse("ephemeral", "No config found.")
 }
 
-// RandomTeam contains random members for a random team
-type RandomTeam struct {
+// Team contains random members for a random team
+type Team struct {
 	Name    string
 	Members []string
 }
 
-func getRandomMembers(ctx context.Context, teamID string, channelID string) []RandomTeam {
-	randomMembers := []RandomTeam{}
+func getRandomMembers(ctx context.Context, teamID string, channelID string) []Team {
+	randomMembers := []Team{}
 	key := generateTeamsKey(ctx, teamID, channelID)
 	teams := new(Teams)
 
 	if err := datastore.Get(ctx, key, teams); err != nil {
-		//TODO: Create random teams
+
 	}
 	return randomMembers
 }

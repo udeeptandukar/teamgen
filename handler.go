@@ -9,7 +9,6 @@ import (
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/urlfetch"
 )
 
 func isTokenValid(ctx context.Context, token string) bool {
@@ -42,11 +41,9 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 
 func handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-
 	teamID := r.FormValue("teamId")
 	channelID := r.FormValue("channelId")
 	err := postMessage(ctx, teamID, channelID)
-
 	if err != nil {
 		log.Errorf(ctx, "Error on sending message: %s", err)
 		fmt.Fprintf(w, "Could not send message: %s", err.Error())
@@ -57,11 +54,7 @@ func handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 func handleOauth(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-
 	err := doOauthAuthorization(ctx, r.FormValue("code"))
-
-	client := urlfetch.Client(ctx)
-
 	if err != nil {
 		log.Errorf(ctx, "Error on authorization: %s", err)
 		fmt.Fprintf(w, "Could not authorize: %s", err.Error())
