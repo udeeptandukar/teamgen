@@ -30,7 +30,11 @@ func postMessage(ctx context.Context, teamID string, channelID string) error {
 	data := url.Values{}
 	data.Set("token", token)
 	data.Set("channel", channelID)
-	data.Set("text", "Hello world")
+	text, err := getRandomMembersMessage(ctx, teamID, channelID)
+	if err != nil {
+		return err
+	}
+	data.Set("text", text)
 	encodedData := data.Encode()
 
 	req, _ := http.NewRequest("POST", postMessageURL, bytes.NewBufferString(encodedData))
