@@ -15,7 +15,7 @@ func TestGetCombinations(t *testing.T) {
 
 func TestBuildPostMessage(t *testing.T) {
 	result := buildPostMessage("A,B,C,D,E", 2)
-	expectedResult := "Team 1: A, B\nTeam 2: C, D, E"
+	expectedResult := []string{"A, B", "C, D, E"}
 	if !reflect.DeepEqual(expectedResult, result) {
 		t.Error(expectedResult, result)
 	}

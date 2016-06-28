@@ -19,6 +19,13 @@ type response struct {
 	Error string
 }
 
+// Attachments holds structure to send attachments to slack
+type Attachments struct {
+	Color   string `json:"color"`
+	PreText string `json:"pretext"`
+	Text    string `json:"text"`
+}
+
 func postMessage(ctx context.Context, teamID string, channelID string) error {
 	client := urlfetch.Client(ctx)
 
@@ -30,11 +37,24 @@ func postMessage(ctx context.Context, teamID string, channelID string) error {
 	data := url.Values{}
 	data.Set("token", token)
 	data.Set("channel", channelID)
-	text, err := getRandomMembersMessage(ctx, teamID, channelID)
+	data.Set("text", "Randomly selected teams:")
+	teams, err := getRandomTeams(ctx, teamID, channelID)
 	if err != nil {
 		return err
 	}
-	data.Set("text", text)
+	attachments := []Attachments{}
+	colors := []string{"#004d99", "#00cc00", "#660066", "#ff3300"}
+	for i := 0; i < len(teams); i++ {
+		attachments = append(attachments, Attachments{
+			Color: colors[i%len(colors)],
+			Text:  teams[i],
+		})
+	}
+	ats, err := json.Marshal(attachments)
+	if err != nil {
+		return err
+	}
+	data.Set("attachments", string(ats))
 	encodedData := data.Encode()
 
 	req, _ := http.NewRequest("POST", postMessageURL, bytes.NewBufferString(encodedData))
