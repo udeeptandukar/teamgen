@@ -28,6 +28,14 @@ func generateTeamsKey(ctx context.Context, teamID string, channelID string) *dat
 	return datastore.NewKey(ctx, "Teams", keyString, 0, nil)
 }
 
+func getAllTeams(ctx context.Context) ([]Teams, error) {
+	var teams []Teams
+	if _, err := datastore.NewQuery("Teams").GetAll(ctx, &teams); err != nil {
+		return teams, err
+	}
+	return teams, nil
+}
+
 func addMember(ctx context.Context, teamID string, channelID string, members []string) SlackCmdResponse {
 	key := generateTeamsKey(ctx, teamID, channelID)
 	teams := new(Teams)
@@ -67,13 +75,13 @@ func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdRe
 	return constructSlackCmdResponse("ephemeral", "No config found.")
 }
 
-func getRandomMembersMessage(ctx context.Context, teamID string, channelID string) (string, error) {
-	result := ""
+func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]string, error) {
+	result := []string{}
 	key := generateTeamsKey(ctx, teamID, channelID)
 	teams := new(Teams)
 
 	if err := datastore.Get(ctx, key, teams); err != nil {
-		return "", err
+		return result, err
 	}
 	memberCombinations := teams.MemberCombinations
 	index := rand.Intn(len(memberCombinations))
@@ -85,27 +93,22 @@ func getRandomMembersMessage(ctx context.Context, teamID string, channelID strin
 		teams.MemberCombinations = memberCombinations
 	}
 	if _, err := datastore.Put(ctx, key, teams); err != nil {
-		return "", err
+		return result, err
 	}
 
 	result = buildPostMessage(members, teams.NumberOfTeams)
 	return result, nil
 }
 
-func buildPostMessage(members string, numberOfTeams int) string {
-	result := ""
+func buildPostMessage(members string, numberOfTeams int) []string {
+	result := []string{}
 	randomMembers := strings.Split(members, ",")
 	teamSize := len(randomMembers) / numberOfTeams
 	i := 0
 	for i = 0; i < numberOfTeams-1; i++ {
-		if i != 0 {
-			result = result + "\n"
-		}
-		result = result + "Team " + strconv.Itoa(i+1) + ": "
-		result = result + strings.Join(randomMembers[:(teamSize*(i+1))], ", ")
+		result = append(result, strings.Join(randomMembers[:(teamSize*(i+1))], ", "))
 	}
-	result = result + "\nTeam " + strconv.Itoa(i+1) + ": "
-	result = result + strings.Join(randomMembers[(teamSize*i):], ", ")
+	result = append(result, strings.Join(randomMembers[(teamSize*i):], ", "))
 	return result
 }
 
