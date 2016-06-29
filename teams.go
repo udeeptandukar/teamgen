@@ -107,9 +107,10 @@ func buildPostMessage(members string, numberOfTeams int) []string {
 	teamSize := len(randomMembers) / numberOfTeams
 	i := 0
 	for i = 0; i < numberOfTeams-1; i++ {
-		result = append(result, strings.Join(randomMembers[:(teamSize*(i+1))], ", "))
+		result = append(result, strings.Join(randomMembers[:teamSize], ", "))
+		randomMembers = append([]string{}, randomMembers[teamSize:]...)
 	}
-	result = append(result, strings.Join(randomMembers[(teamSize*i):], ", "))
+	result = append(result, strings.Join(randomMembers, ", "))
 	return result
 }
 
