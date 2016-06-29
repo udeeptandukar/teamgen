@@ -2,3 +2,4 @@ cron:
 - description: daily scheduling job
   url: /cron/scheduling
   schedule: every day 00:00
+  timezone: America/Regina
