@@ -43,8 +43,8 @@ func handleCommand(w http.ResponseWriter, r *http.Request) {
 
 func handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	teamID := r.FormValue("teamId")
-	channelID := r.FormValue("channelId")
+	teamID := r.PostFormValue("teamId")
+	channelID := r.PostFormValue("channelId")
 	err := postMessage(ctx, teamID, channelID)
 	if err != nil {
 		log.Errorf(ctx, "Error on sending message: %s", err)
@@ -76,13 +76,11 @@ func handleScheduling(w http.ResponseWriter, r *http.Request) {
 
 	for i := 0; i < len(teams); i++ {
 		eta := time.Now().Add(time.Duration(8) * time.Hour)
-		data := map[string][]string{"teamId": {teams[i].SlackTeamID}, "channelID": {teams[i].SlackChannelID}}
+		data := map[string][]string{"teamId": {teams[i].SlackTeamID}, "channelId": {teams[i].SlackChannelID}}
 		t := taskqueue.NewPOSTTask("/sendMsg", data)
 		t.ETA = eta
 		if _, err := taskqueue.Add(ctx, t, "send-message"); err != nil {
 			log.Errorf(ctx, "Error on scheduling: %s", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
 	}
 }
