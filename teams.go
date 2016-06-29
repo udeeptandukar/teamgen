@@ -84,7 +84,8 @@ func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]str
 		return result, err
 	}
 	memberCombinations := teams.MemberCombinations
-	index := rand.Intn(len(memberCombinations))
+	r := rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
+	index := r.Intn(len(memberCombinations))
 	members := memberCombinations[index]
 	memberCombinations = append(memberCombinations[:index], memberCombinations[index+1:]...)
 	if len(memberCombinations) == 0 {
