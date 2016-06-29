@@ -36,6 +36,12 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 		resp = addMember(ctx, teamID, channelID, args)
 	case "show-config":
 		resp = showConfig(ctx, teamID, channelID)
+	case "generate":
+		if err := postMessage(ctx, teamID, channelID); err != nil {
+			resp = constructSlackCmdResponse("ephemeral", "Something went wrong. Please try again.")
+		} else {
+			resp = constructSlackCmdResponse("ephemeral", "Team is generated.")
+		}
 	default:
 		resp = constructSlackCmdResponse("ephemeral", "Invalid command")
 	}
