@@ -34,3 +34,20 @@ func TestBuildPostMessageForEvenMembers(t *testing.T) {
 		t.Error(expectedResult, result)
 	}
 }
+
+func TestHasMembersExclusionReturnsTrueIfMembersExclusionExists(t *testing.T) {
+	teams := []string{"A, B", "C, D", "E, F"}
+	exclusionMembers := []string{"A", "B"}
+	result := hasMembersExclusion(teams, exclusionMembers)
+	expectedResult := true
+	if !reflect.DeepEqual(expectedResult, result) {
+		t.Error(expectedResult, result)
+	}
+
+	teams = []string{"B, C", "A, D", "E, F"}
+	exclusionMembers = []string{"A", "B", "C"}
+	result = hasMembersExclusion(teams, exclusionMembers)
+	if !reflect.DeepEqual(expectedResult, result) {
+		t.Error(expectedResult, result)
+	}
+}

@@ -99,12 +99,12 @@ func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdRe
 }
 
 func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]string, error) {
-	result := []string{}
+	randomTeams := []string{}
 	key := generateTeamsKey(ctx, teamID, channelID)
 	teams := new(Teams)
 
 	if err := datastore.Get(ctx, key, teams); err != nil {
-		return result, err
+		return randomTeams, err
 	}
 	memberCombinations := teams.MemberCombinations
 	r := rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
@@ -117,12 +117,14 @@ func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]str
 		teams.MemberCombinations = memberCombinations
 	}
 	if _, err := datastore.Put(ctx, key, teams); err != nil {
-		return result, err
+		return randomTeams, err
 	}
 
-	result = buildPostMessage(members, teams.NumberOfTeams)
-
-	return result, nil
+	randomTeams = buildPostMessage(members, teams.NumberOfTeams)
+	if hasMembersExclusion(randomTeams, teams.MemberExclusions) {
+		return getRandomTeams(ctx, teamID, channelID)
+	}
+	return randomTeams, nil
 }
 
 func buildPostMessage(members string, numberOfTeams int) []string {
@@ -138,8 +140,19 @@ func buildPostMessage(members string, numberOfTeams int) []string {
 	return result
 }
 
-func hasMembersExclusion(teams []string, members []string) {
-
+func hasMembersExclusion(teams []string, members []string) bool {
+	for i := 0; i < len(teams); i++ {
+		numOfExclusions := 0
+		for j := 0; j < len(members); j++ {
+			if strings.Contains(teams[i], members[j]) {
+				numOfExclusions = numOfExclusions + 1
+			}
+			if numOfExclusions > 1 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func swapElement(list *[]string, i int, j int) {
