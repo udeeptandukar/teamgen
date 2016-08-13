@@ -34,6 +34,8 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 	switch cmdType {
 	case "member-add":
 		resp = addMember(ctx, teamID, channelID, args)
+	case "member-exclusion":
+		resp = addMemberExclusions(ctx, teamID, channelID, args)
 	case "show-config":
 		resp = showConfig(ctx, teamID, channelID)
 	case "generate":
