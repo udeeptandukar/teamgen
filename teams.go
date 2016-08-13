@@ -121,6 +121,7 @@ func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]str
 	}
 
 	result = buildPostMessage(members, teams.NumberOfTeams)
+
 	return result, nil
 }
 
@@ -135,6 +136,10 @@ func buildPostMessage(members string, numberOfTeams int) []string {
 	}
 	result = append(result, strings.Join(randomMembers, ", "))
 	return result
+}
+
+func hasMembersExclusion(teams []string, members []string) {
+
 }
 
 func swapElement(list *[]string, i int, j int) {
