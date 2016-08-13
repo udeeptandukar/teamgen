@@ -90,7 +90,7 @@ func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdRe
 
 	if err := datastore.Get(ctx, key, teams); err == nil {
 		text := "Team members: " + strings.Join(teams.Members, ", ")
-		text += "\nTeam members exclusions: " + strings.Join(teams.MemberExclusions, ",")
+		text += "\nTeam members exclusions: " + strings.Join(teams.MemberExclusions, ", ")
 		text += "\nNo. of teams: " + strconv.Itoa(teams.NumberOfTeams)
 		return constructSlackCmdResponse("ephemeral", text)
 	}
