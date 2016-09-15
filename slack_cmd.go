@@ -41,6 +41,10 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 		resp = addMemberExclusions(ctx, teamID, channelID, args)
 	case "show-config":
 		resp = showConfig(ctx, teamID, channelID)
+	case "enable":
+		resp = toggleAutoGeneration(ctx, teamID, channelID, true)
+	case "disable":
+		resp = toggleAutoGeneration(ctx, teamID, channelID, false)
 	case "generate":
 		msg, err := postMessage(ctx, teamID, channelID)
 		if err != nil {

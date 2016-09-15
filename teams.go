@@ -105,6 +105,27 @@ func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdRe
 	return constructSlackCmdResponse("ephemeral", "No config found.")
 }
 
+func toggleAutoGeneration(ctx context.Context, teamID string, channelID string, enable bool) SlackCmdResponse {
+	key := generateTeamsKey(ctx, teamID, channelID)
+	teams := new(Teams)
+
+	if err := datastore.Get(ctx, key, teams); err != nil {
+		teams.SlackTeamID = teamID
+		teams.SlackChannelID = channelID
+		teams.EnableAutoGenerate = enable
+		teams.LastUpdated = time.Now()
+	} else {
+		teams.EnableAutoGenerate = enable
+		teams.LastUpdated = time.Now()
+	}
+
+	if _, err := datastore.Put(ctx, key, teams); err != nil {
+		log.Errorf(ctx, "Error on enabling auto generation: %s", err)
+		return constructSlackCmdResponse("ephemeral", "Action failed. Please try again.")
+	}
+	return constructSlackCmdResponse("ephemeral", "Action completed")
+}
+
 func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]string, error) {
 	randomTeams := []string{}
 	key := generateTeamsKey(ctx, teamID, channelID)
