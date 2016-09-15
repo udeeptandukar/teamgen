@@ -22,6 +22,7 @@ type Teams struct {
 	MemberCombinations []string
 	MemberExclusions   []string
 	LastUpdated        time.Time
+	EnableAutoGenerate bool
 }
 
 func generateTeamsKey(ctx context.Context, teamID string, channelID string) *datastore.Key {
@@ -54,6 +55,12 @@ func addMember(ctx context.Context, teamID string, channelID string, members []s
 		teams.NumberOfTeams = len(members) / 2
 		teams.MemberCombinations = getCombinations(members)
 		teams.LastUpdated = time.Now()
+	}
+
+	if len(teams.Members) > 0 {
+		teams.EnableAutoGenerate = true
+	} else {
+		teams.EnableAutoGenerate = false
 	}
 
 	if _, err := datastore.Put(ctx, key, teams); err != nil {
@@ -106,6 +113,11 @@ func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]str
 	if err := datastore.Get(ctx, key, teams); err != nil {
 		return randomTeams, err
 	}
+
+	if teams.NumberOfTeams == 0 {
+		return randomTeams, nil
+	}
+
 	memberCombinations := teams.MemberCombinations
 	r := rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
 	index := r.Intn(len(memberCombinations))

@@ -13,10 +13,10 @@
 </head>
 
 <body>
-  <div class="container">
+  <div class="container" style="max-width:768px;">
     <div class="row">
       <div class="col-sm-12 h">
-        <img src="../static/images/logo-pair-gen.png" style="margin-top: 25px; position: absolute;" />
+        <a href="/"><img src="../static/images/logo-pair-gen.png" style="margin-top: 25px; position: absolute;" /></a>
         <span style="float: left; margin-left: 125px;">
           <h1 style="font-weight: normal; margin: 30px 0 10px 0; color: #232423;">Pair Generator</h1>
           <a href="https://slack.com/oauth/authorize?scope=commands&client_id=52127528597.52303118119">
@@ -30,10 +30,16 @@
         <p><b>Pair generator</b> is able to generate random teams of pairs which can help distribute team members for 
         working in groups or do pair programming.</p>
         <br />
-        <p>Add members from which pairs will be generated using <b>member-add</b> command.</p>
+        <p>Add members from which pairs will be generated using <b>member-add</b> command. 
+        Members should be provided separated by space. Subsequent call to <b>member-add</b> command 
+        will replace the previous member list.
+        </p>
         <p><img src="../static/images/member-add.png" /></p>
         <br />
-        <p>If some members should not be paired with each other, use <b>member-exclusion</b> command.</p>
+        <p>If some members should not be paired with each other, use <b>member-exclusion</b> command.
+        Members should be provided separated by space. Subsequent call to <b>member-exclusion</b> command 
+        will replace the previous member list.
+        </p>
         <p><img src="../static/images/member-exclusion.png" /></p>
         <br />
         <p>To see configuration of pair generator, type <b>show-config</b> command.</p>
@@ -44,6 +50,9 @@
         <p>To generate random teams of pairs, use <b>generate</b> command.</p>
         <p><img src="../static/images/generate.png" /></p>
         <p><img src="../static/images/generate-result.png" /></p>
+        <br />
+        <h3>Support</h3>
+        <p>If you have any concerns at all, please contact me at udeeptandukar at gmail dot com.</p>
         <br />
       </div>
     </div>

@@ -11,6 +11,7 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 )
 
@@ -26,7 +27,7 @@ type Attachments struct {
 	Text    string `json:"text"`
 }
 
-func postMessage(ctx context.Context, teamID string, channelID string) error {
+func postMessage(ctx context.Context, teamID string, channelID string) (string, error) {
 	client := urlfetch.Client(ctx)
 
 	token, err := getBotAccessToken(ctx, teamID)
@@ -37,11 +38,15 @@ func postMessage(ctx context.Context, teamID string, channelID string) error {
 	data := url.Values{}
 	data.Set("token", token)
 	data.Set("channel", channelID)
-	data.Set("text", "Randomly selected teams:")
 	teams, err := getRandomTeams(ctx, teamID, channelID)
 	if err != nil {
-		return err
+		return "", err
 	}
+	if len(teams) == 0 {
+		return "No team member provided. Please use `member-add` command to add members.", nil
+	}
+
+	data.Set("text", "Randomly selected teams:")
 	attachments := []Attachments{}
 	colors := []string{"#004d99", "#00cc00", "#660066", "#ff3300"}
 	for i := 0; i < len(teams); i++ {
@@ -52,10 +57,13 @@ func postMessage(ctx context.Context, teamID string, channelID string) error {
 	}
 	ats, err := json.Marshal(attachments)
 	if err != nil {
-		return err
+		return "", err
 	}
 	data.Set("attachments", string(ats))
+
 	encodedData := data.Encode()
+
+	log.Debugf(ctx, "Posting message: %s", encodedData)
 
 	req, _ := http.NewRequest("POST", postMessageURL, bytes.NewBufferString(encodedData))
 	resp, _ := client.Do(req)
@@ -64,14 +72,14 @@ func postMessage(ctx context.Context, teamID string, channelID string) error {
 	respBody := &response{}
 	decoder := json.NewDecoder(resp.Body)
 	if err := decoder.Decode(respBody); err != nil {
-		return err
+		return "", err
 	}
 
 	if !respBody.Ok {
-		return errors.New(respBody.Error)
+		return "", errors.New(respBody.Error)
 	}
 
-	return nil
+	return "Team has been generated.", nil
 }
 
 func doOauthAuthorization(ctx context.Context, code string) error {

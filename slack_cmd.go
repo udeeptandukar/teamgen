@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"golang.org/x/net/context"
+	"google.golang.org/appengine/log"
 )
 
 // SlackCmdResponse is slash response
@@ -31,6 +32,8 @@ func parseCommand(command string) (string, []string) {
 
 func processComamnd(ctx context.Context, cmdType string, args []string, teamID string, channelID string) SlackCmdResponse {
 	var resp SlackCmdResponse
+	log.Debugf(ctx, "Processing command: %s", cmdType)
+
 	switch cmdType {
 	case "member-add":
 		resp = addMember(ctx, teamID, channelID, args)
@@ -39,11 +42,21 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 	case "show-config":
 		resp = showConfig(ctx, teamID, channelID)
 	case "generate":
-		if err := postMessage(ctx, teamID, channelID); err != nil {
-			resp = constructSlackCmdResponse("ephemeral", "Something went wrong. Please try again.")
+		msg, err := postMessage(ctx, teamID, channelID)
+		if err != nil {
+			log.Errorf(ctx, "Error generating team: %s", err)
+			resp = constructSlackCmdResponse("ephemeral", "Team not generated. Please try again.")
 		} else {
-			resp = constructSlackCmdResponse("ephemeral", "Team is generated.")
+			resp = constructSlackCmdResponse("ephemeral", msg)
 		}
+	case "help":
+		helpMsg := "Use `/pair-generator` to generate random teams of pairs\n"
+		helpMsg += "• `/pair-generator member-add Joe Iris Doe` to add members\n"
+		helpMsg += "• `/pair-generator member-exclusion Joe Iris` to have members not in same team\n"
+		helpMsg += "• `/pair-generator show-config` to show current configurations\n"
+		helpMsg += "• `/pair-generator generate` to generate teams\n"
+		helpMsg += "For more about Pair Generator, visit <https://pair-generator.appspot.com/|here>."
+		resp = constructSlackCmdResponse("ephemeral", helpMsg)
 	default:
 		resp = constructSlackCmdResponse("ephemeral", "Invalid command")
 	}
