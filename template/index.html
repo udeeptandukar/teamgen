@@ -9,6 +9,8 @@
   <meta name="author" content="Udeep Tandukar">
 
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js" type="text/javascript"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
   <link href='../static/images/logo-pair-gen.png' rel='icon' type='image/png'>
 </head>
 
@@ -19,7 +21,7 @@
         <a href="/"><img src="../static/images/logo-pair-gen.png" style="margin-top: 25px; position: absolute;" /></a>
         <span style="float: left; margin-left: 125px;">
           <h1 style="font-weight: normal; margin: 30px 0 10px 0; color: #232423;">Pair Generator</h1>
-          <a href="https://slack.com/oauth/authorize?scope=commands&client_id=52127528597.52303118119">
+          <a href="https://slack.com/oauth/authorize?scope=commands,bot&client_id=52127528597.52303118119">
             <img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" />
           </a>
         </span>
@@ -27,35 +29,61 @@
     </div>
     <div class="row">
       <div class="col-sm-12 h" style="padding-top: 40px;">
+        <div class="alert alert-success" id="success-alert" style="display: none;">
+          <button type="button" class="close" data-dismiss="alert">x</button>
+          <strong>Congratulations! </strong>Installation was successful.
+        </div>
+        <div class="alert alert-warning" id="warning-alert" style="display: none;">
+          <button type="button" class="close" data-dismiss="alert">x</button>
+          <strong>Something went wrong!!!</strong> We're sorry, but something went wrong. Please try again!!!
+        </div>
         <p><b>Pair generator</b> is able to generate random teams of pairs which can help distribute team members for 
         working in groups or do pair programming.</p>
         <br />
-        <p>Add members from which pairs will be generated using <b>member-add</b> command. 
-        Members should be provided separated by space. Subsequent call to <b>member-add</b> command 
+        <p>Add members from which pairs will be generated using <code>/pair-generator member-add</code> command. 
+        Members should be provided separated by space. Subsequent call to <code>/pair-generator member-add</code> command 
         will replace the previous member list.
         </p>
         <p><img src="../static/images/member-add.png" /></p>
         <br />
-        <p>If some members should not be paired with each other, use <b>member-exclusion</b> command.
-        Members should be provided separated by space. Subsequent call to <b>member-exclusion</b> command 
+        <p>If some members should not be paired with each other, use <code>/pair-generator member-exclusion</code> command.
+        Members should be provided separated by space. Subsequent call to <code>/pair-generator member-exclusion</code> command 
         will replace the previous member list.
         </p>
         <p><img src="../static/images/member-exclusion.png" /></p>
         <br />
-        <p>To see configuration of pair generator, type <b>show-config</b> command.</p>
+        <p>To see configuration of pair generator, type <code>/pair-generator show-config</code> command.</p>
         <p><img src="../static/images/show-config.png" /></p>
         <p><b>Configuration</b> from pair generator</p>
         <p><img src="../static/images/show-config-result.png" /></p>
         <br />
-        <p>To generate random teams of pairs, use <b>generate</b> command.</p>
+        <p>To generate random teams of pairs, use <code>/pair-generator generate</code> command.</p>
         <p><img src="../static/images/generate.png" /></p>
         <p><img src="../static/images/generate-result.png" /></p>
         <br />
         <h3>Support</h3>
-        <p>If you have any concerns at all, please contact me at udeeptandukar at gmail dot com.</p>
+        <p>For help in slack, use <code>/pair-generator help</code>. If you have any concerns at all, please contact me at udeeptandukar at gmail dot com.</p>
         <br />
       </div>
     </div>
   </div>
 </body>
+<script type="text/javascript">
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+    var status = getParameterByName("status");
+    if (status == "auth") {
+      $("#success-alert").show();
+    }
+    else if (status == "no-auth") {
+      $("#warning-alert").show();
+    }
+  </script>
 </html>
