@@ -80,12 +80,18 @@ func handleScheduling(w http.ResponseWriter, r *http.Request) {
 		if teams[i].EnableAutoGenerate == false {
 			continue
 		}
-		eta := time.Now().Add(time.Duration(8) * time.Hour)
-		data := map[string][]string{"teamId": {teams[i].SlackTeamID}, "channelId": {teams[i].SlackChannelID}}
-		t := taskqueue.NewPOSTTask("/sendMsg", data)
+		deferSendMsg(ctx, teams[i].SlackTeamID, teams[i].SlackChannelID, 8)
+	}
+}
+
+func deferSendMsg(ctx context.Context, teamID string, channelID string, etaHours int) {
+	data := map[string][]string{"teamId": {teamID}, "channelId": {channelID}}
+	t := taskqueue.NewPOSTTask("/sendMsg", data)
+	if etaHours > 0 {
+		eta := time.Now().Add(time.Duration(etaHours) * time.Hour)
 		t.ETA = eta
-		if _, err := taskqueue.Add(ctx, t, "send-message"); err != nil {
-			log.Errorf(ctx, "Error on scheduling: %s", err)
-		}
+	}
+	if _, err := taskqueue.Add(ctx, t, "send-message"); err != nil {
+		log.Errorf(ctx, "Error on scheduling: %s", err)
 	}
 }

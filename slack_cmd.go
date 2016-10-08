@@ -1,6 +1,7 @@
 package teamgen
 
 import (
+	"fmt"
 	"strings"
 
 	"golang.org/x/net/context"
@@ -46,20 +47,15 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 	case "disable":
 		resp = toggleAutoGeneration(ctx, teamID, channelID, false)
 	case "generate":
-		msg, err := postMessage(ctx, teamID, channelID)
-		if err != nil {
-			log.Errorf(ctx, "Error generating team: %s", err)
-			resp = constructSlackCmdResponse("ephemeral", "Team not generated. Please try again.")
-		} else {
-			resp = constructSlackCmdResponse("ephemeral", msg)
-		}
+		deferSendMsg(ctx, teamID, channelID, 0)
+		resp = constructSlackCmdResponse("ephemeral", "Team generation scheduled.")
 	case "help":
-		helpMsg := "Use `/pair-generator` to generate random teams of pairs\n"
-		helpMsg += "• `/pair-generator member-add Joe Iris Doe` to add members\n"
-		helpMsg += "• `/pair-generator member-exclusion Joe Iris` to have members not in same team\n"
-		helpMsg += "• `/pair-generator show-config` to show current configurations\n"
-		helpMsg += "• `/pair-generator generate` to generate teams\n"
-		helpMsg += "For more about Pair Generator, visit <https://pair-generator.appspot.com/|here>."
+		helpMsg := fmt.Sprintf("Use `/%s` to generate random teams of pairs\n", slackCommand)
+		helpMsg += fmt.Sprintf("• `/%s member-add Joe Iris Doe` to add members\n", slackCommand)
+		helpMsg += fmt.Sprintf("• `/%s member-exclusion Joe,Iris Joe,Doe` to have members not in same team\n", slackCommand)
+		helpMsg += fmt.Sprintf("• `/%s show-config` to show current configurations\n", slackCommand)
+		helpMsg += fmt.Sprintf("• `/%s generate` to generate teams\n", slackCommand)
+		helpMsg += fmt.Sprintf("For more about %s, visit <https://pair-generator.appspot.com/|here>.", applicationName)
 		resp = constructSlackCmdResponse("ephemeral", helpMsg)
 	default:
 		resp = constructSlackCmdResponse("ephemeral", "Invalid command")

@@ -2,7 +2,6 @@ package teamgen
 
 import (
 	"math/rand"
-	"strconv"
 	"strings"
 	"time"
 
@@ -11,16 +10,19 @@ import (
 	"google.golang.org/appengine/log"
 )
 
+// Pair stores pair members
+type Pair struct {
+	First  string
+	Second string
+}
+
 // Teams to store information required to generate random team
 type Teams struct {
 	SlackTeamID        string
 	SlackChannelID     string
 	Members            []string
-	Schedules          []string
-	NumberOfTeams      int
-	RandomName         bool
-	MemberCombinations []string
-	MemberExclusions   []string
+	MemberExclusions   []Pair
+	LastGenerated      []Pair
 	LastUpdated        time.Time
 	EnableAutoGenerate bool
 }
@@ -46,14 +48,9 @@ func addMember(ctx context.Context, teamID string, channelID string, members []s
 		teams.SlackTeamID = teamID
 		teams.SlackChannelID = channelID
 		teams.Members = members
-		teams.RandomName = false
-		teams.NumberOfTeams = len(members) / 2
-		teams.MemberCombinations = getCombinations(members)
 		teams.LastUpdated = time.Now()
 	} else {
 		teams.Members = members
-		teams.NumberOfTeams = len(members) / 2
-		teams.MemberCombinations = getCombinations(members)
 		teams.LastUpdated = time.Now()
 	}
 
@@ -70,17 +67,18 @@ func addMember(ctx context.Context, teamID string, channelID string, members []s
 	return constructSlackCmdResponse("ephemeral", "Team members added: "+strings.Join(members, ", "))
 }
 
-func addMemberExclusions(ctx context.Context, teamID string, channelID string, members []string) SlackCmdResponse {
+func addMemberExclusions(ctx context.Context, teamID string, channelID string, csvPairs []string) SlackCmdResponse {
 	key := generateTeamsKey(ctx, teamID, channelID)
 	teams := new(Teams)
 
+	exclusionPairs := convertToMemberExclusionPairs(csvPairs)
 	if err := datastore.Get(ctx, key, teams); err != nil {
 		teams.SlackTeamID = teamID
 		teams.SlackChannelID = channelID
-		teams.MemberExclusions = members
+		teams.MemberExclusions = exclusionPairs
 		teams.LastUpdated = time.Now()
 	} else {
-		teams.MemberExclusions = members
+		teams.MemberExclusions = exclusionPairs
 		teams.LastUpdated = time.Now()
 	}
 
@@ -88,7 +86,24 @@ func addMemberExclusions(ctx context.Context, teamID string, channelID string, m
 		log.Errorf(ctx, "Error on sending message: %s", err)
 		return constructSlackCmdResponse("ephemeral", "Error occurred while adding members exclusions. Please try again.")
 	}
-	return constructSlackCmdResponse("ephemeral", "Team members exclusions added: "+strings.Join(members, ", "))
+	return constructSlackCmdResponse("ephemeral", "Team members exclusions added: "+strings.Join(csvPairs, " | "))
+}
+
+func convertToMemberExclusionPairs(csvPairs []string) []Pair {
+	pairs := []Pair{}
+	for i := 0; i < len(csvPairs); i++ {
+		pair := Pair{First: "", Second: ""}
+		splits := strings.Split(csvPairs[i], ",")
+		if len(splits) > 0 {
+			pair.First = strings.Trim(splits[0], " ")
+			if len(splits) > 1 {
+				pair.Second = strings.Trim(splits[1], " ")
+			}
+		}
+		pairs = append(pairs, pair)
+	}
+
+	return pairs
 }
 
 func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdResponse {
@@ -97,8 +112,7 @@ func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdRe
 
 	if err := datastore.Get(ctx, key, teams); err == nil {
 		text := "Team members: " + strings.Join(teams.Members, ", ")
-		text += "\nTeam members exclusions: " + strings.Join(teams.MemberExclusions, ", ")
-		text += "\nNo. of teams: " + strconv.Itoa(teams.NumberOfTeams)
+		text += "\nTeam members exclusions: " + strings.Join(getPairsCSV(teams.MemberExclusions), " | ")
 		return constructSlackCmdResponse("ephemeral", text)
 	}
 
@@ -127,94 +141,79 @@ func toggleAutoGeneration(ctx context.Context, teamID string, channelID string, 
 }
 
 func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]string, error) {
-	randomTeams := []string{}
+	randomPairs := []string{}
 	key := generateTeamsKey(ctx, teamID, channelID)
 	teams := new(Teams)
 
 	if err := datastore.Get(ctx, key, teams); err != nil {
-		return randomTeams, err
+		return randomPairs, err
+	}
+	if len(teams.Members) == 0 {
+		return randomPairs, nil
 	}
 
-	if teams.NumberOfTeams == 0 {
-		return randomTeams, nil
-	}
+	pairs := getRandomPairs(teams.Members, teams.MemberExclusions, teams.LastGenerated)
+	teams.LastGenerated = pairs
 
-	memberCombinations := teams.MemberCombinations
-	r := rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
-	index := r.Intn(len(memberCombinations))
-	members := memberCombinations[index]
-	memberCombinations = append(memberCombinations[:index], memberCombinations[index+1:]...)
-	if len(memberCombinations) == 0 {
-		teams.MemberCombinations = getCombinations(teams.Members)
-	} else {
-		teams.MemberCombinations = memberCombinations
-	}
 	if _, err := datastore.Put(ctx, key, teams); err != nil {
-		return randomTeams, err
+		return randomPairs, err
 	}
 
-	randomTeams = buildPostMessage(members, teams.NumberOfTeams)
-	if hasMembersExclusion(randomTeams, teams.MemberExclusions) {
-		return getRandomTeams(ctx, teamID, channelID)
-	}
-	return randomTeams, nil
+	randomPairs = getPairsCSV(pairs)
+	return randomPairs, nil
 }
 
-func buildPostMessage(members string, numberOfTeams int) []string {
-	result := []string{}
-	randomMembers := strings.Split(members, ",")
-	teamSize := len(randomMembers) / numberOfTeams
-	i := 0
-	for i = 0; i < numberOfTeams-1; i++ {
-		result = append(result, strings.Join(randomMembers[:teamSize], ", "))
-		randomMembers = append([]string{}, randomMembers[teamSize:]...)
+func getPairsCSV(pairs []Pair) []string {
+	csvPairs := []string{}
+	pair := ""
+	for i := 0; i < len(pairs); i++ {
+		pair = pairs[i].First
+		if pairs[i].Second != "" {
+			pair = pair + ", " + pairs[i].Second
+		}
+		csvPairs = append(csvPairs, pair)
 	}
-	result = append(result, strings.Join(randomMembers, ", "))
-	return result
+	return csvPairs
 }
 
-func hasMembersExclusion(teams []string, members []string) bool {
-	for i := 0; i < len(teams); i++ {
-		numOfExclusions := 0
-		for j := 0; j < len(members); j++ {
-			if strings.Contains(teams[i], members[j]) {
-				numOfExclusions = numOfExclusions + 1
-			}
-			if numOfExclusions > 1 {
-				return true
-			}
+func getRandomPairs(members []string, memberExclusions []Pair, lastGenerated []Pair) []Pair {
+	pairs := []Pair{}
+	pair := Pair{}
+	tmpMembers := []string{}
+	for len(members) > 0 {
+		pair, tmpMembers = getPair(members)
+		if !pairExists(pair, memberExclusions) && !pairExists(pair, lastGenerated) {
+			members = tmpMembers
+			pairs = append(pairs, pair)
+		}
+	}
+	return pairs
+}
+
+func getPair(members []string) (Pair, []string) {
+	pair := Pair{}
+	pair.First, members = popRandomMember(members)
+	pair.Second, members = popRandomMember(members)
+	return pair, members
+}
+
+func popRandomMember(members []string) (string, []string) {
+	if len(members) == 0 {
+		return "", []string{}
+	}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	i := r.Intn(len(members))
+	v := members[i]
+	members[len(members)-1], members[i] = members[i], members[len(members)-1]
+	return v, members[:len(members)-1]
+}
+
+func pairExists(pair Pair, pairs []Pair) bool {
+	for i := 0; i < len(pairs); i++ {
+		if (pair.First == pairs[i].First || pair.First == pairs[i].Second) &&
+			(pair.Second == pairs[i].First || pair.Second == pairs[i].Second) {
+			return true
 		}
 	}
 	return false
-}
-
-func swapElement(list *[]string, i int, j int) {
-	tmp := (*list)[i]
-	(*list)[i] = (*list)[j]
-	(*list)[j] = tmp
-}
-
-func getCombinations(members []string) []string {
-	combinations := [][]string{}
-	total := len(members)
-	curMembers := []string{}
-	for i := 0; i < total-1; i++ {
-		curMembers = append([]string{}, members...)
-		swapElement(&curMembers, 0, i)
-		swapElement(&curMembers, 1, i+1)
-		combinations = append(combinations, curMembers)
-
-		for j := i + 2; j < total; j++ {
-			curMembers = append([]string{}, curMembers...)
-			swapElement(&curMembers, 1, j)
-			combinations = append(combinations, curMembers)
-		}
-	}
-
-	results := []string{}
-	for i := 0; i < len(combinations); i++ {
-		results = append(results, strings.Join(combinations[i], ","))
-	}
-
-	return results
 }
