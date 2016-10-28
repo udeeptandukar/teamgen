@@ -13,14 +13,6 @@ func TestGetPairReturnsRemainingMembers(t *testing.T) {
 	}
 }
 
-func TestRandomPairsReturnsPairs(t *testing.T) {
-	members := []string{"A", "B", "C", "D", "E"}
-	ps := getRandomPairs(members, []Pair{}, []Pair{})
-	if !reflect.DeepEqual(3, len(ps)) {
-		t.Error(3, len(ps))
-	}
-}
-
 func TestPopRandomMemberReturnsOneElement(t *testing.T) {
 	members := []string{"A"}
 	v, r := popRandomMember(members)
@@ -72,6 +64,70 @@ func TestConvertToMemberExclusionPairsConvertsCSVPairsToProperPairs(t *testing.T
 	csvPairs := []string{"A,B", "C, D", "E"}
 	result := convertToMemberExclusionPairs(csvPairs)
 	expectedResult := []Pair{Pair{First: "A", Second: "B"}, Pair{First: "C", Second: "D"}, Pair{First: "E", Second: ""}}
+	if !reflect.DeepEqual(expectedResult, result) {
+		t.Error(expectedResult, result)
+	}
+}
+
+func TestGenerateCombinationsReturnsListOfPairsForEvenMembers(t *testing.T) {
+	members := []string{"A", "B", "C", "D", "E", "F"}
+	result := generateCombinations(members)
+	expectedResult := []Pair{
+		Pair{First: "A", Second: "B"}, Pair{First: "A", Second: "C"}, Pair{First: "A", Second: "D"}, Pair{First: "A", Second: "E"}, Pair{First: "A", Second: "F"},
+		Pair{First: "B", Second: "C"}, Pair{First: "B", Second: "D"}, Pair{First: "B", Second: "E"}, Pair{First: "B", Second: "F"},
+		Pair{First: "C", Second: "D"}, Pair{First: "C", Second: "E"}, Pair{First: "C", Second: "F"},
+		Pair{First: "D", Second: "E"}, Pair{First: "D", Second: "F"},
+		Pair{First: "E", Second: "F"},
+	}
+	if !reflect.DeepEqual(expectedResult, result) {
+		t.Error(expectedResult, result)
+	}
+}
+
+func TestGenerateCombinationsReturnsListOfPairsForOddMembers(t *testing.T) {
+	members := []string{"A", "B", "C", "D", "E"}
+	result := generateCombinations(members)
+	expectedResult := []Pair{
+		Pair{First: "A", Second: "B"}, Pair{First: "A", Second: "C"}, Pair{First: "A", Second: "D"}, Pair{First: "A", Second: "E"},
+		Pair{First: "B", Second: "C"}, Pair{First: "B", Second: "D"}, Pair{First: "B", Second: "E"},
+		Pair{First: "C", Second: "D"}, Pair{First: "C", Second: "E"},
+		Pair{First: "D", Second: "E"},
+	}
+	if !reflect.DeepEqual(expectedResult, result) {
+		t.Error(expectedResult, result)
+	}
+}
+
+func TestGenerateCombinationsReturnsListOfPairsForThreeMembers(t *testing.T) {
+	members := []string{"A", "B", "C"}
+	result := generateCombinations(members)
+	expectedResult := []Pair{
+		Pair{First: "A", Second: "B"}, Pair{First: "A", Second: "C"},
+		Pair{First: "B", Second: "C"},
+	}
+	if !reflect.DeepEqual(expectedResult, result) {
+		t.Error(expectedResult, result)
+	}
+}
+
+func TestPairSubtractionReturnsCorrectResult(t *testing.T) {
+	combinations := []Pair{
+		Pair{First: "A", Second: "B"}, Pair{First: "A", Second: "C"}, Pair{First: "A", Second: "D"}, Pair{First: "A", Second: "E"},
+		Pair{First: "B", Second: "C"}, Pair{First: "B", Second: "D"}, Pair{First: "B", Second: "E"},
+		Pair{First: "C", Second: "D"}, Pair{First: "C", Second: "E"},
+		Pair{First: "D", Second: "E"},
+	}
+	excludes := []Pair{
+		Pair{First: "A", Second: "B"}, Pair{First: "A", Second: "C"},
+		Pair{First: "B", Second: "C"},
+	}
+	result := pairSubtraction(combinations, excludes)
+	expectedResult := []Pair{
+		Pair{First: "A", Second: "D"}, Pair{First: "A", Second: "E"},
+		Pair{First: "B", Second: "D"}, Pair{First: "B", Second: "E"},
+		Pair{First: "C", Second: "D"}, Pair{First: "C", Second: "E"},
+		Pair{First: "D", Second: "E"},
+	}
 	if !reflect.DeepEqual(expectedResult, result) {
 		t.Error(expectedResult, result)
 	}

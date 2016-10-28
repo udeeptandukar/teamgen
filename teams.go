@@ -21,6 +21,7 @@ type Teams struct {
 	SlackTeamID        string
 	SlackChannelID     string
 	Members            []string
+	Combinations       []Pair
 	MemberExclusions   []Pair
 	LastGenerated      []Pair
 	LastUpdated        time.Time
@@ -48,13 +49,15 @@ func addMember(ctx context.Context, teamID string, channelID string, members []s
 		teams.SlackTeamID = teamID
 		teams.SlackChannelID = channelID
 		teams.Members = members
+		teams.Combinations = generateCombinations(members)
 		teams.LastUpdated = time.Now()
 	} else {
 		teams.Members = members
+		teams.Combinations = generateCombinations(members)
 		teams.LastUpdated = time.Now()
 	}
 
-	if len(teams.Members) > 0 {
+	if len(teams.Members) > 2 {
 		teams.EnableAutoGenerate = true
 	} else {
 		teams.EnableAutoGenerate = false
@@ -148,11 +151,11 @@ func getRandomTeams(ctx context.Context, teamID string, channelID string) ([]str
 	if err := datastore.Get(ctx, key, teams); err != nil {
 		return randomPairs, err
 	}
-	if len(teams.Members) == 0 {
+	if len(teams.Combinations) == 0 {
 		return randomPairs, nil
 	}
 
-	pairs := getRandomPairs(teams.Members, teams.MemberExclusions, teams.LastGenerated)
+	pairs := getRandomPairs(teams.Members, teams.Combinations, teams.MemberExclusions, teams.LastGenerated)
 	teams.LastGenerated = pairs
 
 	if _, err := datastore.Put(ctx, key, teams); err != nil {
@@ -176,15 +179,92 @@ func getPairsCSV(pairs []Pair) []string {
 	return csvPairs
 }
 
-func getRandomPairs(members []string, memberExclusions []Pair, lastGenerated []Pair) []Pair {
+func getRandomPairs(members []string, combinations []Pair, memberExclusions []Pair, lastGenerated []Pair) []Pair {
 	pairs := []Pair{}
 	pair := Pair{}
-	tmpMembers := []string{}
-	for len(members) > 0 {
-		pair, tmpMembers = getPair(members)
-		if !pairExists(pair, memberExclusions) && !pairExists(pair, lastGenerated) {
-			members = tmpMembers
+	excludes := append(memberExclusions, lastGenerated...)
+	combinations = pairSubtraction(combinations, excludes)
+	teams := len(members) / 2
+
+	for i := 0; i < teams; i++ {
+		if len(combinations) > 0 {
+			pair = getWeightedRandomPair(combinations)
+			combinations = removePairs(combinations, pair)
 			pairs = append(pairs, pair)
+			members = removeMembers(members, pair)
+		}
+	}
+
+	// Get pair from left over members
+	if len(members) > 0 {
+		pair = Pair{}
+		pair.First = members[0]
+		if len(members) > 1 {
+			pair.Second = members[1]
+		} else {
+			pair.Second = ""
+		}
+		pairs = append(pairs, pair)
+	}
+
+	return pairs
+}
+
+func getWeightedRandomPair(combinations []Pair) Pair {
+	minWeightedPairs := []Pair{}
+	minWeight := 99999
+
+	for i := 0; i < len(combinations); i++ {
+		myWeight := 0
+		for j := 0; j < len(combinations); j++ {
+			if combinations[i].First == combinations[j].First || combinations[i].First == combinations[j].Second ||
+				combinations[i].Second == combinations[j].First || combinations[i].Second == combinations[j].Second {
+				myWeight = myWeight + 1
+			}
+		}
+		if myWeight < minWeight {
+			minWeight = myWeight
+			minWeightedPairs = []Pair{}
+			minWeightedPairs = append(minWeightedPairs, combinations[i])
+		} else if myWeight == minWeight {
+			minWeightedPairs = append(minWeightedPairs, combinations[i])
+		}
+	}
+	return getRandomPair(minWeightedPairs)
+}
+
+func getRandomPair(combinations []Pair) Pair {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	i := r.Intn(len(combinations))
+	return combinations[i]
+}
+
+func removePairs(combinations []Pair, pair Pair) []Pair {
+	pairs := []Pair{}
+	for i := 0; i < len(combinations); i++ {
+		if pair.First != combinations[i].First && pair.First != combinations[i].Second &&
+			pair.Second != combinations[i].First && pair.Second != combinations[i].Second {
+			pairs = append(pairs, combinations[i])
+		}
+	}
+	return pairs
+}
+
+func removeMembers(members []string, pair Pair) []string {
+	newMembers := []string{}
+	for i := 0; i < len(members); i++ {
+		if pair.First != members[i] && pair.Second != members[i] {
+			newMembers = append(newMembers, members[i])
+		}
+	}
+	return newMembers
+}
+
+func pairSubtraction(combinations []Pair, excludes []Pair) []Pair {
+	pairs := []Pair{}
+	for i := 0; i < len(combinations); i++ {
+		if !pairExists(combinations[i], excludes) {
+			pairs = append(pairs, combinations[i])
 		}
 	}
 	return pairs
@@ -216,4 +296,16 @@ func pairExists(pair Pair, pairs []Pair) bool {
 		}
 	}
 	return false
+}
+
+func generateCombinations(members []string) []Pair {
+	pairs := []Pair{}
+	n := len(members)
+	for i := 0; i < n; i++ {
+		for j := i + 1; j < n; j++ {
+			pair := Pair{First: members[i], Second: members[j]}
+			pairs = append(pairs, pair)
+		}
+	}
+	return pairs
 }
