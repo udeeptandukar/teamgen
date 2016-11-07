@@ -76,12 +76,22 @@ func handleScheduling(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Could not authorize: %s", err.Error())
 	}
 
+	todayDay := time.Now().UTC().Weekday().String()
 	for i := 0; i < len(teams); i++ {
-		if teams[i].EnableAutoGenerate == false {
+		if teams[i].EnableAutoGenerate == false || isDayExcluded(teams[i].ExcludeDays, todayDay) {
 			continue
 		}
 		deferSendMsg(ctx, teams[i].SlackTeamID, teams[i].SlackChannelID, 8)
 	}
+}
+
+func isDayExcluded(excludedDays []string, day string) bool {
+	for i := 0; i < len(excludedDays); i++ {
+		if day == excludedDays[i] {
+			return true
+		}
+	}
+	return false
 }
 
 func deferSendMsg(ctx context.Context, teamID string, channelID string, etaHours int) {

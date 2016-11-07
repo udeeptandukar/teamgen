@@ -40,6 +40,8 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 		resp = addMember(ctx, teamID, channelID, args)
 	case "member-exclusion":
 		resp = addMemberExclusions(ctx, teamID, channelID, args)
+	case "days-exclusion":
+		resp = addExcludedDays(ctx, teamID, channelID, args)
 	case "show-config":
 		resp = showConfig(ctx, teamID, channelID)
 	case "enable":
@@ -53,6 +55,7 @@ func processComamnd(ctx context.Context, cmdType string, args []string, teamID s
 		helpMsg := fmt.Sprintf("Use `/%s` to generate random teams of pairs\n", slackCommand)
 		helpMsg += fmt.Sprintf("• `/%s member-add Joe Iris Doe` to add members\n", slackCommand)
 		helpMsg += fmt.Sprintf("• `/%s member-exclusion Joe,Iris Joe,Doe` to have members not in same team\n", slackCommand)
+		helpMsg += fmt.Sprintf("• `/%s days-exclusion Saturday Sunday` to have days not to generate teams\n", slackCommand)
 		helpMsg += fmt.Sprintf("• `/%s show-config` to show current configurations\n", slackCommand)
 		helpMsg += fmt.Sprintf("• `/%s generate` to generate teams\n", slackCommand)
 		helpMsg += fmt.Sprintf("For more about %s, visit <https://pair-generator.appspot.com/|here>.", applicationName)

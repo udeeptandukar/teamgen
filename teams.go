@@ -24,6 +24,7 @@ type Teams struct {
 	Combinations       []Pair
 	MemberExclusions   []Pair
 	LastGenerated      []Pair
+	ExcludeDays        []string
 	LastUpdated        time.Time
 	EnableAutoGenerate bool
 }
@@ -50,6 +51,7 @@ func addMember(ctx context.Context, teamID string, channelID string, members []s
 		teams.SlackChannelID = channelID
 		teams.Members = members
 		teams.Combinations = generateCombinations(members)
+		teams.ExcludeDays = []string{"Saturday", "Sunday"}
 		teams.LastUpdated = time.Now()
 	} else {
 		teams.Members = members
@@ -109,6 +111,27 @@ func convertToMemberExclusionPairs(csvPairs []string) []Pair {
 	return pairs
 }
 
+func addExcludedDays(ctx context.Context, teamID string, channelID string, days []string) SlackCmdResponse {
+	key := generateTeamsKey(ctx, teamID, channelID)
+	teams := new(Teams)
+
+	if err := datastore.Get(ctx, key, teams); err != nil {
+		teams.SlackTeamID = teamID
+		teams.SlackChannelID = channelID
+		teams.ExcludeDays = days
+		teams.LastUpdated = time.Now()
+	} else {
+		teams.ExcludeDays = days
+		teams.LastUpdated = time.Now()
+	}
+
+	if _, err := datastore.Put(ctx, key, teams); err != nil {
+		log.Errorf(ctx, "Error on sending message: %s", err)
+		return constructSlackCmdResponse("ephemeral", "Error occurred while adding days exclusions. Please try again.")
+	}
+	return constructSlackCmdResponse("ephemeral", "Excluded days added: "+strings.Join(days, ", "))
+}
+
 func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdResponse {
 	key := generateTeamsKey(ctx, teamID, channelID)
 	teams := new(Teams)
@@ -116,6 +139,7 @@ func showConfig(ctx context.Context, teamID string, channelID string) SlackCmdRe
 	if err := datastore.Get(ctx, key, teams); err == nil {
 		text := "Team members: " + strings.Join(teams.Members, ", ")
 		text += "\nTeam members exclusions: " + strings.Join(getPairsCSV(teams.MemberExclusions), " | ")
+		text += "\nExcluded days: " + strings.Join(teams.ExcludeDays, ", ")
 		return constructSlackCmdResponse("ephemeral", text)
 	}
 
