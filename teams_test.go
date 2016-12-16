@@ -54,7 +54,7 @@ func TestPairExistsReturnsFalseIfDoesNotExists(t *testing.T) {
 func TestGetPairsCSVreturnsListOfCSVPairs(t *testing.T) {
 	pairs := []Pair{Pair{First: "C", Second: "A"}, Pair{First: "B", Second: "D"}, Pair{First: "E", Second: ""}}
 	result := getPairsCSV(pairs)
-	expectedResult := []string{"C, A", "B, D", "E"}
+	expectedResult := []string{"C, A", "B, D, E"}
 	if !reflect.DeepEqual(expectedResult, result) {
 		t.Error(expectedResult, result)
 	}

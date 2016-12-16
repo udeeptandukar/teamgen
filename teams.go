@@ -197,8 +197,11 @@ func getPairsCSV(pairs []Pair) []string {
 		pair = pairs[i].First
 		if pairs[i].Second != "" {
 			pair = pair + ", " + pairs[i].Second
+			csvPairs = append(csvPairs, pair)
+		} else {
+			idx := len(csvPairs) - 1
+			csvPairs[idx] = csvPairs[idx] + ", " + pair
 		}
-		csvPairs = append(csvPairs, pair)
 	}
 	return csvPairs
 }
@@ -213,8 +216,8 @@ func getRandomPairs(members []string, combinations []Pair, memberExclusions []Pa
 	for i := 0; i < teams; i++ {
 		if len(combinations) > 0 {
 			pair = getWeightedRandomPair(combinations)
-			combinations = removePairs(combinations, pair)
 			pairs = append(pairs, pair)
+			combinations = removePairs(combinations, pair)
 			members = removeMembers(members, pair)
 		}
 	}
@@ -223,10 +226,9 @@ func getRandomPairs(members []string, combinations []Pair, memberExclusions []Pa
 	if len(members) > 0 {
 		pair = Pair{}
 		pair.First = members[0]
+		pair.Second = ""
 		if len(members) > 1 {
 			pair.Second = members[1]
-		} else {
-			pair.Second = ""
 		}
 		pairs = append(pairs, pair)
 	}
