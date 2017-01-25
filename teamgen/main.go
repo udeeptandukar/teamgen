@@ -5,8 +5,7 @@ import (
 )
 
 func init() {
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
-	http.Handle("/", http.FileServer(http.Dir("./template/")))
+	http.Handle("/", http.FileServer(http.Dir("./src/")))
 	http.HandleFunc("/cmd", handleCommand)
 	http.HandleFunc("/sendMsg", handleSendMessage)
 	http.HandleFunc("/oauth", handleOauth)
