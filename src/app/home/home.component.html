@@ -1,9 +1,7 @@
-<div class="alert alert-success" id="success-alert" style="display: none;">
-    <button type="button" class="close" data-dismiss="alert">x</button>
+<div class="alert alert-success" id="success-alert" *ngIf="status=='auth'">
     <strong>Congratulations! </strong>Installation was successful.
 </div>
-<div class="alert alert-warning" id="warning-alert" style="display: none;">
-    <button type="button" class="close" data-dismiss="alert">x</button>
+<div class="alert alert-warning" id="warning-alert" *ngIf="status=='no-auth'">
     <strong>Something went wrong!!!</strong> We're sorry, but something went wrong. Please try again!!!
 </div>
 <p><b>Pair generator</b> is able to generate random teams of pairs which can help distribute team members for 
