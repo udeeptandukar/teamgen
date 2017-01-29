@@ -1,0 +1,33 @@
+<div class="alert alert-success" id="success-alert" *ngIf="status=='auth'">
+    <strong>Congratulations! </strong>Installation was successful.
+</div>
+<div class="alert alert-warning" id="warning-alert" *ngIf="status=='no-auth'">
+    <strong>Something went wrong!!!</strong> We're sorry, but something went wrong. Please try again!!!
+</div>
+<p><b>Pair generator</b> is able to generate random teams of pairs which can help distribute team members for 
+working in groups or do pair programming.</p>
+<br />
+<p>Add members from which pairs will be generated using <code>/pair-generator member-add</code> command. 
+Members should be provided separated by space. Subsequent call to <code>/pair-generator member-add</code> command 
+will replace the previous member list.
+</p>
+<p><img src="/static/images/member-add.png" /></p>
+<br />
+<p>If some members should not be paired with each other, use <code>/pair-generator member-exclusion</code> command.
+Members should be provided separated by space. Subsequent call to <code>/pair-generator member-exclusion</code> command 
+will replace the previous member list.
+</p>
+<p><img src="/static/images/member-exclusion.png" /></p>
+<br />
+<p>To see configuration of pair generator, type <code>/pair-generator show-config</code> command.</p>
+<p><img src="/static/images/show-config.png" /></p>
+<p><b>Configuration</b> from pair generator</p>
+<p><img src="/static/images/show-config-result.png" /></p>
+<br />
+<p>To generate random teams of pairs, use <code>/pair-generator generate</code> command.</p>
+<p><img src="/static/images/generate.png" /></p>
+<p><img src="/static/images/generate-result.png" /></p>
+<br />
+<h3>Support</h3>
+<p>For help in slack, use <code>/pair-generator help</code>. If you have any concerns at all, please contact me at udeeptandukar at gmail dot com.</p>
+<br />

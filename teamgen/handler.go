@@ -60,10 +60,10 @@ func handleOauth(w http.ResponseWriter, r *http.Request) {
 	err := doOauthAuthorization(ctx, r.FormValue("code"))
 	if len(r.FormValue("error")) > 0 || err != nil {
 		log.Errorf(ctx, "Error on authorization: %s", err)
-		http.Redirect(w, r, "/index.html?status=no-auth", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/#/home?status=no-auth", http.StatusMovedPermanently)
 	} else {
 		log.Debugf(ctx, "Team authorized successfully")
-		http.Redirect(w, r, "/index.html?status=auth", http.StatusMovedPermanently)
+		http.Redirect(w, r, "/#/home?status=auth", http.StatusMovedPermanently)
 	}
 }
 
