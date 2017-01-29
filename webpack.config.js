@@ -2,7 +2,6 @@ var webpack = require('webpack');
 var path = require('path');
 var webpackMerge = require('webpack-merge');
 
-const PRODUCTION = 'production';
 const basePlugins = [
   new webpack.DefinePlugin({
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
@@ -22,7 +21,7 @@ const prodPlugins = [
   })
 ];
 
-const plugins = basePlugins.concat((process.env.NODE_ENV === PRODUCTION) ? prodPlugins: []);
+const plugins = basePlugins.concat((process.env.NODE_ENV === 'production') ? prodPlugins: []);
 
 // Webpack Config
 var webpackConfig = {
