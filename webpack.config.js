@@ -2,10 +2,32 @@ var webpack = require('webpack');
 var path = require('path');
 var webpackMerge = require('webpack-merge');
 
+const PRODUCTION = 'production';
+const basePlugins = [
+  new webpack.DefinePlugin({
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+  }),
+  new webpack.ContextReplacementPlugin(
+    // The (\\|\/) piece accounts for path separators in *nix and Windows
+    /angular(\\|\/)core(\\|\/)src(\\|\/)linker/,
+    path.resolve(__dirname, './src'),
+    {
+      // your Angular Async Route paths relative to this root directory
+    }
+  ),
+];
+const prodPlugins = [  
+  new webpack.optimize.UglifyJsPlugin({
+    compress: { warnings: false }
+  })
+];
+
+const plugins = basePlugins.concat((process.env.NODE_ENV === PRODUCTION) ? prodPlugins: []);
+
 // Webpack Config
 var webpackConfig = {
   entry: {
-    'main': './src/main.browser.ts',
+    main: './src/main.browser.ts',
   },
 
   output: {
@@ -13,16 +35,7 @@ var webpackConfig = {
     path: path.resolve(__dirname, './src/static/js'),
   },
 
-  plugins: [
-    new webpack.ContextReplacementPlugin(
-      // The (\\|\/) piece accounts for path separators in *nix and Windows
-      /angular(\\|\/)core(\\|\/)src(\\|\/)linker/,
-      path.resolve(__dirname, './src'),
-      {
-        // your Angular Async Route paths relative to this root directory
-      }
-    ),
-  ],
+  plugins: plugins,
 
   module: {
     loaders: [
